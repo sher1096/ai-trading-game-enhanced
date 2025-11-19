@@ -1,0 +1,24 @@
+{
+  "binance": {
+    "enabled": false,
+    "api_key": "YOUR_BINANCE_API_KEY",
+    "api_secret": "YOUR_BINANCE_API_SECRET",
+    "testnet": true,
+    "comment": "币安交易所配置 - testnet=true使用测试网，false使用实盘"
+  },
+  "okx": {
+    "enabled": false,
+    "api_key": "YOUR_OKX_API_KEY",
+    "api_secret": "YOUR_OKX_API_SECRET",
+    "testnet": true,
+    "comment": "欧意交易所配置 - testnet=true使用测试网，false使用实盘"
+  },
+  "trading_config": {
+    "max_position_size": 0.1,
+    "max_position_usdt": 1000,
+    "stop_loss_pct": 0.02,
+    "take_profit_pct": 0.05,
+    "leverage": 5,
+    "comment": "交易配置 - 最大仓位、止损止盈、杠杆等"
+  }
+}

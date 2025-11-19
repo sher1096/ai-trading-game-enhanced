@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AITradeGame v2.0 - 新版指标</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-left">
+                    <h1 class="app-title">AITradeGame</h1>
+                    <div class="header-status">
+                        <span class="status-dot active"></span>
+                        <span class="status-text">运行中</span>
+                    </div>
+                    <a href="https://github.com/chadyi/AITradeGame" target="_blank" class="header-link" title="访问项目GitHub">
+                        <i class="bi bi-github"></i>
+                        <span class="header-link-text">GitHub</span>
+                    </a>
+                </div>
+                <div class="header-right">
+                    <!-- Quick Actions -->
+                    <div class="header-actions-group">
+                        <div class="update-indicator" id="updateIndicator" style="display: none;">
+                            <button class="btn-icon update-btn" id="checkUpdateBtn" title="检查更新">
+                                <i class="bi bi-arrow-up-circle"></i>
+                            </button>
+                        </div>
+                        <button class="btn-icon" id="refreshBtn" title="刷新">
+                            <i class="bi bi-arrow-clockwise"></i>
+                        </button>
+                    </div>
+
+                    <div class="header-divider"></div>
+
+                    <!-- Main Navigation -->
+                    <nav class="header-nav">
+                        <a href="/" class="nav-link active">
+                            <i class="bi bi-speedometer2"></i>
+                            <span>仪表盘</span>
+                        </a>
+                        <a href="/coins-management" class="nav-link">
+                            <i class="bi bi-coin"></i>
+                            <span>币种管理</span>
+                        </a>
+                        <a href="#" class="nav-link" id="liveTradingBtn">
+                            <i class="bi bi-rocket-takeoff"></i>
+                            <span>实盘交易</span>
+                        </a>
+                    </nav>
+
+                    <div class="header-divider"></div>
+
+                    <!-- Primary Action -->
+                    <button class="btn-primary" id="addModelBtn">
+                        <i class="bi bi-plus-lg"></i>
+                        添加模型
+                    </button>
+
+                    <div class="header-divider"></div>
+
+                    <!-- Settings Menu -->
+                    <div class="header-menu">
+                        <button class="btn-icon" id="settingsMenuBtn" title="设置">
+                            <i class="bi bi-three-dots-vertical"></i>
+                        </button>
+                        <div class="menu-dropdown" id="settingsDropdown" style="display: none;">
+                            <button class="menu-item" id="addApiProviderBtn">
+                                <i class="bi bi-cloud-plus"></i>
+                                <span>API提供方</span>
+                            </button>
+                            <button class="menu-item" id="settingsBtn">
+                                <i class="bi bi-gear"></i>
+                                <span>系统设置</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="app-body">
+            <!-- Sidebar -->
+            <aside class="app-sidebar">
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <span>交易模型</span>
+                    </div>
+                    <div id="modelList" class="model-list"></div>
+                </div>
+                <div class="sidebar-section">
+                    <div class="section-header">
+                        <span>市场行情</span>
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div id="marketPrices" class="market-prices"></div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="app-main">
+                <!-- Stats Cards -->
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">账户总值</span>
+                            <i class="bi bi-wallet2 text-primary"></i>
+                        </div>
+                        <div class="stat-value">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">可用现金</span>
+                            <i class="bi bi-cash text-success"></i>
+                        </div>
+                        <div class="stat-value">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">已实现盈亏</span>
+                            <i class="bi bi-graph-up text-info"></i>
+                        </div>
+                        <div class="stat-value">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <span class="stat-label">未实现盈亏</span>
+                            <i class="bi bi-graph-down text-warning"></i>
+                        </div>
+                        <div class="stat-value">$0.00</div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="content-card">
+                    <div class="card-header">
+                        <h3 class="card-title">账户价值走势</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="accountChart" style="width: 100%; height: 300px;"></div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="content-card">
+                    <div class="card-tabs">
+                        <button class="tab-btn active" data-tab="positions">持仓</button>
+                        <button class="tab-btn" data-tab="trades">交易记录</button>
+                        <button class="tab-btn" data-tab="conversations">AI对话</button>
+                    </div>
+
+                    <div class="tab-content active" id="positionsTab">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>币种</th>
+                                        <th>方向</th>
+                                        <th>数量</th>
+                                        <th>开仓价</th>
+                                        <th>当前价</th>
+                                        <th>杠杆</th>
+                                        <th>盈亏</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="positionsBody">
+                                    <tr><td colspan="7" class="empty-state">暂无持仓</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="tradesTab">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>币种</th>
+                                        <th>操作</th>
+                                        <th>数量</th>
+                                        <th>价格</th>
+                                        <th>盈亏</th>
+                                        <th>费用</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tradesBody">
+                                    <tr><td colspan="6" class="empty-state">暂无交易记录</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="tab-content" id="conversationsTab">
+                        <div id="conversationsBody" class="conversations-list">
+                            <div class="empty-state">暂无对话记录</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- API Provider Modal -->
+    <div class="modal" id="apiProviderModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>API提供方管理</h3>
+                <button class="btn-close" id="closeApiProviderModalBtn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>API名称</label>
+                    <input type="text" id="providerName" placeholder="例如: OpenAI" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>API地址</label>
+                    <input type="text" id="providerApiUrl" placeholder="https://api.openai.com" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>API密钥</label>
+                    <input type="password" id="providerApiKey" placeholder="sk-..." class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>可用模型</label>
+                    <div class="model-input-group">
+                        <input type="text" id="availableModels" placeholder="gpt-5, gpt-5-mini, claude-sonnet-4-5" class="form-input">
+                        <button type="button" class="btn-secondary" id="fetchModelsBtn">
+                            <i class="bi bi-arrow-clockwise"></i> 获取模型
+                        </button>
+                    </div>
+                    <small class="form-help">手动输入模型名称，用逗号分隔，或点击获取模型按钮自动获取</small>
+                </div>
+                <div class="form-group">
+                    <label>已保存的API提供方</label>
+                    <div id="providerList" class="provider-list"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelApiProviderBtn">取消</button>
+                <button class="btn-primary" id="saveApiProviderBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Model Modal -->
+    <div class="modal" id="addModelModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加交易模型</h3>
+                <button class="btn-close" id="closeModalBtn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>选择API提供方</label>
+                    <select id="modelProvider" class="form-input">
+                        <option value="">请先添加API提供方</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>模型</label>
+                    <select id="modelIdentifier" class="form-input">
+                        <option value="">请选择API提供方</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>模型显示名称</label>
+                    <input type="text" id="modelName" placeholder="例如: GPT-5交易员 或 Claude Sonnet 4.5交易员" class="form-input">
+                    <small class="form-help">用于显示的友好名称</small>
+                </div>
+                <div class="form-group">
+                    <label>初始资金</label>
+                    <input type="number" id="initialCapital" value="100000" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>交易间隔（分钟）</label>
+                    <input type="number" id="tradingInterval" value="60" min="1" max="1440" class="form-input">
+                    <small class="form-help">设置该模型的交易决策时间间隔（1-1440分钟），每个模型可以有不同的间隔</small>
+                </div>
+
+                <!-- Trading Knowledge Configuration Section -->
+                <div class="form-group" style="border: 2px solid #667eea; border-radius: 12px; padding: 20px; margin-top: 24px; background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                        <i class="bi bi-lightbulb" style="font-size: 20px; color: #667eea;"></i>
+                        <label style="margin: 0; font-weight: 700; font-size: 16px; color: #667eea;">AI交易知识库配置</label>
+                    </div>
+                    <small class="form-help" style="display: block; margin-bottom: 16px;">为AI提供专业交易知识，提升决策质量（提示词长度：127-4766字符）</small>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-weight: 600; color: var(--text-1); margin-bottom: 8px; display: block;">选择知识模板</label>
+                        <select id="knowledgeTemplate" class="form-input" style="font-weight: 500;">
+                            <option value="none">无模块（基础版 - 127字符）</option>
+                            <option value="conservative">保守型（重风控 - 2426字符，20%仓位，3%止损）</option>
+                            <option value="aggressive">激进型（重技术 - 2624字符，50%仓位，8%止损）</option>
+                            <option value="balanced" selected>平衡型（推荐 - 3317字符，30%仓位，5%止损）</option>
+                            <option value="quantitative">量化型（数据驱动 - 3093字符，30%仓位，5%止损）</option>
+                            <option value="trend_following">趋势跟随型（顺大逆小 - 4766字符，40%仓位，6%止损）</option>
+                            <option value="custom">自定义（选择特定模块）</option>
+                        </select>
+                    </div>
+
+                    <!-- Template Description -->
+                    <div id="templateDescription" style="background: rgba(102, 126, 234, 0.1); border-left: 4px solid #667eea; padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; line-height: 1.6;">
+                        <strong>平衡型：</strong>风险收益平衡，适合大多数交易者。包含：风险管理、技术分析理论、市场周期认知、交易心理学、指标组合与共振。
+                    </div>
+
+                    <!-- Custom Module Selection (Hidden by default) -->
+                    <div id="customModulesPanel" style="display: none; margin-top: 16px; padding: 16px; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <label style="font-weight: 600; color: var(--text-1); margin-bottom: 12px; display: block;">选择知识模块（可多选）</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="risk_management">
+                                <span>风险管理</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="position_sizing">
+                                <span>仓位管理</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="technical_theory">
+                                <span>技术分析理论</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="candlestick">
+                                <span>K线形态</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="market_cycle">
+                                <span>市场周期认知</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="trend_strength">
+                                <span>趋势强度评估</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="psychology">
+                                <span>交易心理学</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="multi_timeframe">
+                                <span>多时间框架分析</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="indicator_combination">
+                                <span>指标组合共振</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="money_management">
+                                <span>资金管理</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="quantitative">
+                                <span>量化指标</span>
+                            </label>
+                            <label class="checkbox-label" style="font-size: 13px;">
+                                <input type="checkbox" class="knowledge-module-checkbox" value="trend_direction">
+                                <span>趋势方向识别</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Knowledge Parameters (Only shown when modules are enabled) -->
+                    <div id="knowledgeParamsPanel" style="margin-top: 16px; padding: 16px; background: white; border-radius: 8px; border: 1px solid #e5e7eb;">
+                        <label style="font-weight: 600; color: var(--text-1); margin-bottom: 12px; display: block;">知识模块参数</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label class="param-label">最大仓位（%）:</label>
+                                <input type="number" id="knowledgeMaxPosition" class="form-input" value="30" min="10" max="100" step="5">
+                            </div>
+                            <div>
+                                <label class="param-label">止损（%）:</label>
+                                <input type="number" id="knowledgeStopLoss" class="form-input" value="5.0" min="1" max="20" step="0.5">
+                            </div>
+                            <div>
+                                <label class="param-label">止盈（%）:</label>
+                                <input type="number" id="knowledgeTakeProfit" class="form-input" value="15.0" min="5" max="50" step="1">
+                            </div>
+                        </div>
+                        <small class="form-help" style="margin-top: 8px; display: block;">这些参数会被集成到AI的交易知识提示词中</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-label" style="margin-bottom: 12px;">
+                        <input type="checkbox" id="enableTechnicalIndicators" checked>
+                        <span style="font-size: 15px; font-weight: 600;">启用技术指标分析</span>
+                    </label>
+                    <small class="form-help">勾选后可以为AI提供技术指标参考数据</small>
+                </div>
+
+                <!-- Indicator Configuration -->
+                <div class="form-group" style="margin-bottom: 0;">
+                    <div id="indicatorConfigPanel" style="display: block;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px;">
+                            <label style="margin: 0; font-weight: 600; color: var(--text-1);">
+                                <i class="bi bi-sliders"></i> 指标配置
+                            </label>
+                            <small style="color: var(--text-3);">可滚动查看所有指标</small>
+                        </div>
+
+                        <!-- 优先级系统说明 -->
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; padding: 12px; margin-bottom: 16px; border-left: 4px solid #fbbf24;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="font-size: 16px; font-weight: 700; color: #fff;">⚡ 两档优先级决策系统</span>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+                                <div style="color: #fbbf24; font-weight: 600; font-size: 13px; margin-bottom: 6px;">📊 第一档（最高优先级）- 趋势判断</div>
+                                <div style="color: #fff; font-size: 12px; line-height: 1.6; padding-left: 12px;">
+                                    <div style="margin-bottom: 4px;">• <strong>EMA多空排列：</strong>144/576、169/676两对EMA的位置关系</div>
+                                    <div>• <strong>高低点抬升：</strong>多周期K线最高价/最低价的变化趋势</div>
+                                </div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.15); border-radius: 6px; padding: 10px; margin-bottom: 8px;">
+                                <div style="color: #a78bfa; font-weight: 600; font-size: 13px; margin-bottom: 6px;">📈 第二档（辅助判断）- 形态分析</div>
+                                <div style="color: #fff; font-size: 12px; line-height: 1.6; padding-left: 12px;">
+                                    <div>• <strong>K线形态：</strong>涨吞没、Pinbar、超跌反弹等价格行为</div>
+                                </div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); border-radius: 6px; padding: 8px;">
+                                <div style="color: #fff; font-size: 11px; line-height: 1.5;">
+                                    <strong>⚙️ 决策逻辑：</strong>第一档信号明确时（置信度>60%）占主导；第一档不明确时，按权重综合判断（第一档50%、第二档30%、辅助20%）
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MA Configuration -->
+                    <div class="indicator-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="maEnabled" checked>
+                            <span>MA - 简单移动平均线</span>
+                        </label>
+                        <div class="indicator-params" id="maParams">
+                            <label class="param-label">MA周期（逗号分隔）:</label>
+                            <input type="text" id="maPeriods" class="form-input" value="5, 10, 20, 60" placeholder="例如: 5, 10, 20, 60">
+                            <small class="form-help">设置多条MA均线周期</small>
+                        </div>
+                    </div>
+
+                        <!-- EMA Configuration -->
+                    <div class="indicator-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="emaEnabled" checked>
+                            <span>EMA - 指数移动平均线</span>
+                        </label>
+                        <div class="indicator-params" id="emaParams">
+                            <label class="param-label">EMA周期（逗号分隔）:</label>
+                            <input type="text" id="emaPeriods" class="form-input" value="144, 169, 576, 676" placeholder="例如: 144, 169, 576, 676">
+                            <small class="form-help">设置多条EMA均线周期</small>
+                        </div>
+                    </div>
+
+                    <!-- BOLL Configuration -->
+                    <div class="indicator-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="bollEnabled" checked>
+                            <span>BOLL - 布林带</span>
+                        </label>
+                        <div class="indicator-params" id="bollParams">
+                            <div style="display: flex; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <label class="param-label">周期:</label>
+                                    <input type="number" id="bollPeriod" class="form-input" value="20" min="5" max="100">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="param-label">标准差倍数:</label>
+                                    <input type="number" id="bollStdDev" class="form-input" value="2" min="1" max="3" step="0.1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RSI Configuration -->
+                    <div class="indicator-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="rsiEnabled" checked>
+                            <span>RSI - 相对强弱指标</span>
+                        </label>
+                        <div class="indicator-params" id="rsiParams">
+                            <label class="param-label">周期:</label>
+                            <input type="number" id="rsiPeriod" class="form-input" value="14" min="5" max="50">
+                        </div>
+                    </div>
+
+                    <!-- MACD Configuration -->
+                    <div class="indicator-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="macdEnabled" checked>
+                            <span>MACD - 平滑异同移动平均线</span>
+                        </label>
+                        <div class="indicator-params" id="macdParams">
+                            <div style="display: flex; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <label class="param-label">快线:</label>
+                                    <input type="number" id="macdFast" class="form-input" value="12" min="5" max="50">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="param-label">慢线:</label>
+                                    <input type="number" id="macdSlow" class="form-input" value="26" min="10" max="100">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="param-label">信号线:</label>
+                                    <input type="number" id="macdSignal" class="form-input" value="9" min="5" max="30">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Trend Strength Configuration -->
+                    <div class="indicator-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="trendStrengthEnabled" checked>
+                            <span>趋势强度 - 多周期高低点分析</span>
+                        </label>
+                        <div class="indicator-params" id="trendStrengthParams">
+                            <label class="param-label">分析周期（多选）:</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" class="trend-period-checkbox" value="1h" checked>
+                                    <span>1小时</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" class="trend-period-checkbox" value="4h" checked>
+                                    <span>4小时</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" class="trend-period-checkbox" value="1d" checked>
+                                    <span>1天</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" class="trend-period-checkbox" value="1w">
+                                    <span>1周</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px;">
+                                    <input type="checkbox" class="trend-period-checkbox" value="1M">
+                                    <span>1月</span>
+                                </label>
+                            </div>
+                            <label class="param-label">分析K线数量:</label>
+                            <input type="number" id="trendStrengthBars" class="form-input" value="3" min="2" max="10" style="width: 100px;">
+                            <small class="form-help">分析最近几根K线的高低点变化趋势</small>
+                        </div>
+                    </div>
+
+                    <!-- Candlestick Patterns Configuration -->
+                    <div class="indicator-section">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="candlestickPatternsEnabled" checked>
+                            <span>K线形态 - 价格行为分析</span>
+                        </label>
+                        <div class="indicator-params" id="candlestickPatternsParams">
+                            <label class="param-label">识别形态:</label>
+                            <div style="display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px;">
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #22c55e;">
+                                    <span>✓ 涨吞没 - 阳线完全吞没前阴线</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #22c55e;">
+                                    <span>✓ Pinbar - 长下影线反转形态</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #22c55e;">
+                                    <span>✓ 洗盘整理 - 大阳线后盘整蓄势</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #22c55e;">
+                                    <span>✓ 均线支撑 - 价格在均线附近企稳</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #22c55e;">
+                                    <span>✓ 超跌反弹 - 连续阴线后阳线企稳</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #ef4444;">
+                                    <span>⚠ 跌吞没 - 阴线完全吞没前阳线 [谨慎]</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #ef4444;">
+                                    <span>⚠ 射击之星 - 长上影线回落形态 [谨慎]</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #ef4444;">
+                                    <span>⚠ 超涨回调 - 连续阳线后阴线回调 [谨慎]</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px; color: #3b82f6;">
+                                    <span>ℹ 支撑阻力位 - 前高前低分析（多空共通）</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; font-size: 13px;">
+                                    <span>✓ 趋势健康度 - MA5/BOLL中轨生命线</span>
+                                </label>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <div style="flex: 1;">
+                                    <label class="param-label">回看K线数:</label>
+                                    <input type="number" id="candlestickLookback" class="form-input" value="20" min="10" max="50">
+                                </div>
+                                <div style="flex: 1;">
+                                    <label class="param-label">Pinbar影线比例:</label>
+                                    <input type="number" id="candlestickPinbarRatio" class="form-input" value="2.5" min="1.5" max="5" step="0.5">
+                                </div>
+                            </div>
+                            <small class="form-help">自动识别关键K线形态，提供价格行为分析</small>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>自定义提示词（可选）</label>
+                    <textarea id="customPrompt" class="form-input" rows="4" placeholder="输入自定义交易策略描述，AI将根据这个描述做决策..."></textarea>
+                    <small class="form-help">留空使用默认提示词</small>
+                </div>
+
+                <!-- Live Trading Configuration -->
+                <div class="form-group" style="border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
+                    <label class="checkbox-label" style="margin-bottom: 12px;">
+                        <input type="checkbox" id="enableLiveTrading">
+                        <span style="font-size: 15px; font-weight: 600; color: #7c3aed;">
+                            <i class="bi bi-rocket-takeoff"></i> 启用AI自动实盘交易
+                        </span>
+                    </label>
+                    <small class="form-help">勾选后，AI生成的交易信号将自动执行到真实交易所</small>
+                </div>
+
+                <div id="liveTradingConfigPanel" style="display: none; background: #f9fafb; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                        <strong>⚠️ 风险警告：</strong>
+                        <ul style="margin: 8px 0 0 20px; font-size: 12px;">
+                            <li>AI自动交易存在资金风险，请谨慎使用</li>
+                            <li>建议先在测试网或小金额测试</li>
+                            <li>请确保已在"实盘交易"中配置好交易所API</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-group">
+                        <label>选择交易所</label>
+                        <select id="liveExchange" class="form-input">
+                            <option value="">请选择交易所</option>
+                            <option value="binance">Binance（币安）</option>
+                            <option value="okx">OKX（欧意）</option>
+                        </select>
+                        <small class="form-help">必须先在"实盘交易"页面配置API密钥</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>交易对符号</label>
+                        <input type="text" id="liveSymbol" value="BTC/USDT" class="form-input" placeholder="例如: BTC/USDT, ETH/USDT">
+                        <small class="form-help">AI将在该交易对上执行交易</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelBtn">取消</button>
+                <button class="btn-primary" id="submitBtn">确认添加</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>系统设置</h3>
+                <button class="btn-close" id="closeSettingsModalBtn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>交易频率（分钟）</label>
+                    <input type="number" id="tradingFrequency" min="1" max="1440" class="form-input" placeholder="60">
+                    <small class="form-help">设置AI交易决策的时间间隔（1-1440分钟）</small>
+                </div>
+                <div class="form-group">
+                    <label>交易费率</label>
+                    <input type="number" id="tradingFeeRate" min="0" max="0.01" step="0.0001" class="form-input" placeholder="0.001">
+                    <small class="form-help">每笔交易的手续费费率（0-0.01，例如0.001表示0.1%）</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelSettingsBtn">取消</button>
+                <button class="btn-primary" id="saveSettingsBtn">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Trading Modal -->
+    <div class="modal" id="liveTradingModal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h3 style="color: white;">
+                    <i class="bi bi-rocket-takeoff"></i>
+                    实盘交易管理
+                </h3>
+                <button class="btn-close" id="closeLiveTradingModalBtn" style="color: white;">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="card-tabs" style="margin: 0; border-bottom: 1px solid #e5e7eb;">
+                <button class="tab-btn active" data-tab="exchangeConfig">交易所配置</button>
+                <button class="tab-btn" data-tab="riskConfig">风控参数</button>
+                <button class="tab-btn" data-tab="tradingDashboard">交易面板</button>
+            </div>
+
+            <!-- Exchange Config Tab -->
+            <div class="tab-content active" id="exchangeConfigTab" style="padding: 20px;">
+                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                    <strong>⚠️ 安全提示：</strong>
+                    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+                        <li>建议先使用测试网进行测试</li>
+                        <li>API权限：只开启读取和交易权限，<strong>不要开启提币权限</strong></li>
+                        <li>定期更换API密钥，设置IP白名单</li>
+                    </ul>
+                </div>
+
+                <h4 style="margin-bottom: 15px; color: #4b5563;">币安 Binance</h4>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="binanceEnabled">
+                        启用币安交易
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="binanceTestnet">
+                        使用测试网
+                    </label>
+                    <small style="color: #6b7280;">测试网地址: https://testnet.binancefuture.com/</small>
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="binanceApiKey" placeholder="YOUR_BINANCE_API_KEY" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>API Secret</label>
+                    <input type="password" id="binanceApiSecret" placeholder="YOUR_BINANCE_API_SECRET" class="form-input">
+                </div>
+
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+
+                <h4 style="margin-bottom: 15px; color: #4b5563;">欧意 OKX</h4>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="okxEnabled">
+                        启用OKX交易
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="okxTestnet">
+                        使用测试网
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="okxApiKey" placeholder="YOUR_OKX_API_KEY" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>API Secret</label>
+                    <input type="password" id="okxApiSecret" placeholder="YOUR_OKX_API_SECRET" class="form-input">
+                </div>
+
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn-primary" id="saveExchangeConfigBtn">
+                        <i class="bi bi-check-lg"></i>
+                        保存配置
+                    </button>
+                </div>
+            </div>
+
+            <!-- Risk Config Tab -->
+            <div class="tab-content" id="riskConfigTab" style="padding: 20px;">
+                <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 12px; margin-bottom: 20px; border-radius: 4px;">
+                    <strong>📊 风险控制说明：</strong>
+                    <p style="margin: 8px 0 0 0; font-size: 13px;">
+                        这些参数控制每笔交易的仓位大小、止损止盈条件等，请根据自己的风险承受能力谨慎设置。
+                    </p>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label>最大持仓数量 (BTC)</label>
+                        <input type="number" id="maxPositionSize" value="0.1" step="0.01" class="form-input">
+                        <small style="color: #6b7280;">单个币种最大持仓（BTC数量）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>最大持仓金额 (USDT)</label>
+                        <input type="number" id="maxPositionUsdt" value="1000" step="100" class="form-input">
+                        <small style="color: #6b7280;">单个币种最大持仓（USDT金额）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>总仓位比例</label>
+                        <input type="number" id="maxTotalPosition" value="0.5" step="0.1" min="0" max="1" class="form-input">
+                        <small style="color: #6b7280;">总仓位占总资金的比例（0.5 = 50%）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>止损百分比</label>
+                        <input type="number" id="stopLossPct" value="0.02" step="0.01" class="form-input">
+                        <small style="color: #6b7280;">触发止损的亏损比例（0.02 = 2%）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>止盈百分比</label>
+                        <input type="number" id="takeProfitPct" value="0.05" step="0.01" class="form-input">
+                        <small style="color: #6b7280;">触发止盈的盈利比例（0.05 = 5%）</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>最小信号置信度</label>
+                        <input type="number" id="minConfidence" value="70" min="0" max="100" class="form-input">
+                        <small style="color: #6b7280;">低于此置信度的信号将被忽略</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>杠杆倍数</label>
+                        <input type="number" id="leverage" value="5" min="1" max="20" class="form-input">
+                        <small style="color: #6b7280;">合约杠杆倍数（1-20倍）</small>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: right;">
+                    <button class="btn-primary" id="saveRiskConfigBtn">
+                        <i class="bi bi-check-lg"></i>
+                        保存配置
+                    </button>
+                </div>
+            </div>
+
+            <!-- Trading Dashboard Tab -->
+            <div class="tab-content" id="tradingDashboardTab" style="padding: 20px;">
+                <!-- Connection Status -->
+                <div id="exchangeStatus" style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">连接状态</h4>
+                    <div id="exchangeStatusList" style="font-size: 14px; color: #6b7280;">
+                        未初始化
+                    </div>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+
+                <!-- Account Balance -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">账户余额</h4>
+                    <div style="margin-bottom: 10px;">
+                        <label>交易所：</label>
+                        <select id="balanceExchange" class="form-input" style="width: 200px; display: inline-block; margin-left: 10px;">
+                            <option value="binance">Binance</option>
+                            <option value="okx">OKX</option>
+                        </select>
+                        <button class="btn-secondary" id="refreshBalanceBtn" style="margin-left: 10px;">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            刷新
+                        </button>
+                    </div>
+                    <div id="balanceDisplay" style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                            <div>
+                                <div style="color: #6b7280; font-size: 12px;">USDT</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #10b981;">--</div>
+                            </div>
+                            <div>
+                                <div style="color: #6b7280; font-size: 12px;">BTC</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #f59e0b;">--</div>
+                            </div>
+                            <div>
+                                <div style="color: #6b7280; font-size: 12px;">ETH</div>
+                                <div style="font-size: 18px; font-weight: 600; color: #6366f1;">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+
+                <!-- Positions -->
+                <div style="margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">当前持仓</h4>
+                    <div style="margin-bottom: 10px;">
+                        <label>交易所：</label>
+                        <select id="positionsExchange" class="form-input" style="width: 200px; display: inline-block; margin-left: 10px;">
+                            <option value="binance">Binance</option>
+                            <option value="okx">OKX</option>
+                        </select>
+                        <button class="btn-secondary" id="refreshPositionsBtn" style="margin-left: 10px;">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            刷新
+                        </button>
+                    </div>
+                    <div id="livePositionsDisplay" class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>交易对</th>
+                                    <th>方向</th>
+                                    <th>数量</th>
+                                    <th>开仓价</th>
+                                    <th>杠杆</th>
+                                    <th>未实现盈亏</th>
+                                </tr>
+                            </thead>
+                            <tbody id="livePositionsBody">
+                                <tr><td colspan="6" class="empty-state">暂无持仓</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
+
+                <!-- Manual Trading -->
+                <div>
+                    <h4 style="margin-bottom: 10px;">手动执行交易</h4>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;">
+                        <div class="form-group" style="margin: 0;">
+                            <label>交易所</label>
+                            <select id="manualExchange" class="form-input">
+                                <option value="binance">Binance</option>
+                                <option value="okx">OKX</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label>交易对</label>
+                            <input type="text" id="manualSymbol" value="BTC/USDT" class="form-input">
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label>操作</label>
+                            <select id="manualAction" class="form-input">
+                                <option value="buy">买入</option>
+                                <option value="sell">卖出</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label>置信度</label>
+                            <input type="number" id="manualConfidence" value="85" min="0" max="100" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>信号原因</label>
+                        <input type="text" id="manualReason" value="手动执行" class="form-input">
+                    </div>
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 12px; margin-bottom: 15px; border-radius: 4px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <strong>当前模式：</strong>
+                                <span id="dryRunStatus" style="color: #10b981; font-weight: 600;">模拟模式</span>
+                            </div>
+                            <label style="display: flex; align-items: center; margin: 0;">
+                                <input type="checkbox" id="dryRunToggle" checked style="margin-right: 8px;">
+                                模拟模式（不实际下单）
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="executeManualTradeBtn" style="width: 100%;">
+                        <i class="bi bi-lightning-charge"></i>
+                        执行交易
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Notification Modal -->
+    <div class="modal" id="updateModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <i class="bi bi-cloud-download text-info"></i>
+                    发现新版本
+                </h3>
+                <button class="btn-close" id="closeUpdateModalBtn">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="update-info">
+                    <div class="update-version">
+                        <div class="current-version">
+                            <i class="bi bi-cpu"></i>
+                            <span>当前版本：</span>
+                            <strong id="currentVersion">v1.0.0</strong>
+                        </div>
+                        <div class="arrow-down">
+                            <i class="bi bi-arrow-down"></i>
+                        </div>
+                        <div class="latest-version">
+                            <i class="bi bi-gem"></i>
+                            <span>最新版本：</span>
+                            <strong id="latestVersion" class="text-success">v1.1.0</strong>
+                        </div>
+                    </div>
+                    <div class="update-notes">
+                        <div class="notes-header">
+                            <i class="bi bi-journal-text"></i>
+                            <span>更新说明</span>
+                        </div>
+                        <div id="releaseNotes" class="notes-content">
+                            <p>新功能和改进将在此处显示...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="dismissUpdateBtn">稍后提醒</button>
+                <a href="#" id="githubLink" class="btn-primary" target="_blank">
+                    <i class="bi bi-github"></i>
+                    前往GitHub
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
