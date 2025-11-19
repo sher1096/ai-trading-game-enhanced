@@ -1,6 +1,26 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aitradegame_postgres
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-aitradegame}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   app:
     build: .
     container_name: aitradegame_app
@@ -10,7 +30,7 @@ services:
     environment:
       - FLASK_ENV=${FLASK_ENV:-production}
       - SECRET_KEY=${SECRET_KEY}
-      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/AITradeGame.db}
+      - DATABASE_URL=${DATABASE_URL:-postgresql://postgres:changeme123@postgres:5432/aitradegame}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_API_BASE=${OPENAI_API_BASE:-https://api.openai.com/v1}
       - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
@@ -21,6 +41,9 @@ services:
       - OKX_API_KEY=${OKX_API_KEY}
       - OKX_API_SECRET=${OKX_API_SECRET}
       - OKX_PASSPHRASE=${OKX_PASSPHRASE}
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - app_network
@@ -54,4 +77,5 @@ networks:
 volumes:
   data:
   logs:
+  postgres_data:
 
